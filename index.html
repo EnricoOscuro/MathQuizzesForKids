@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Addition and Subtraction Math Quizzes for Kids</title>
+	<!--$Revision: 5866 $-->
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {font-size: 18px;}
+		h1 {font-size: 22px;}
+		p {margin: 5px 0px;}
+	</style>
+</head>
+<body>
+	<div>
+
+		<h1><span id="operazioni_senza_overflow" class="i18n-text">Operazioni senza overflow</span></h1>
+		<p><a href="/math_1p1.html"><span id="math_1p1" class="i18n-text">Addizioni a una cifra</span></a></p>
+		<p><a href="/math_1m1.html"><span id="math_1m1" class="i18n-text">Sottrazioni a una cifra</span></a></p>
+		<p><a href="/math_2p2.html"><span id="math_2p2" class="i18n-text">Addizioni a due cifre</span></a></p>
+		<p><a href="/math_2m2.html"><span id="math_2m2" class="i18n-text">Sottrazioni a due cifre</span></a></p>
+		<p><a href="/math_3p3.html"><span id="math_3p3" class="i18n-text">Addizioni a tre cifre</span></a></p>
+		<p><a href="/math_3m3.html"><span id="math_3m3" class="i18n-text">Sottrazioni a tre cifre</span></a></p>
+		<p><a href="/math_3pm3.html"><span id="math_3pm3" class="i18n-text">Sottrazioni/addizioni a tre cifre</span></a></p>
+
+		<br>
+		<h1><span id="operazioni_con_overflow" class="i18n-text">Operazioni con overflow</span></h1>
+		<p><a href="/math_1p1_overflow.html"><span id="math_1p1_overflow" class="i18n-text">Addizioni a una cifra</span></a></p>
+		<p><a href="/math_2p2_overflow.html"><span id="math_2p2_overflow" class="i18n-text">Addizioni a due cifre</span></a></p>
+		<p><a href="/math_2m2_overflow.html"><span id="math_2m2_overflow" class="i18n-text">Sottrazioni a due cifre</span></a></p>
+		<p><a href="/math_3p3_overflow.html"><span id="math_3p3_overflow" class="i18n-text">Addizioni a tre cifre</span></a></p>
+		<p><a href="/math_3m3_overflow.html"><span id="math_3m3_overflow" class="i18n-text">Sottrazioni a tre cifre</span></a></p>
+		<p><a href="/math_3pm3_overflow.html"><span id="math_3pm3_overflow" class="i18n-text">Sottrazioni/addizioni a tre cifre</span></a></p>
+
+		<br>
+		<p><a href="https://tally.so/r/wkNaA6" rel="nofollow">Feedback form</a></p>
+
+	</div>
+
+	<script>
+		"use strict";
+		const userLang = navigator.language || navigator.userLanguage;
+		let translations;
+		if (userLang.toLowerCase().includes('ru')) {
+			translations = {math_1p1: 'Сумма 1 на 1', math_2p2: 'Сумма 2 на 2', math_3p3: 'Сумма 3 на 3',
+							math_1m1: 'Разность 1 на 1', math_2m2: 'Разность 2 на 2', math_3m3: 'Разность 3 на 3',
+							math_1p1_overflow: 'Сумма 1 на 1', math_2p2_overflow: 'Сумма 2 на 2', math_3p3_overflow: 'Сумма 3 на 3',
+							math_2m2_overflow: 'Разность 2 на 2', math_3m3_overflow: 'Разность 3 на 3',
+							math_3pm3: 'Разность/сумма 3 на 3', math_3pm3_overflow: 'Разность/сумма 3 на 3',
+							operazioni_senza_overflow: 'Операции без переноса разряда', operazioni_con_overflow: 'Операции с переносом разряда'};
+		} else {
+			translations = {};
+		}
+
+		function translateElement(element) {
+			const key = element.id;
+			if (key in translations) {
+				const translation = translations[key];
+				element.textContent = translation;
+			}
+		}
+
+		const collection = document.querySelectorAll(".i18n-text");
+		collection.forEach(translateElement);
+	</script>
+</body>
+</html>

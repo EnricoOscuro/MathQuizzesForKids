@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Addition and Subtraction Math Quiz for Kids</title>
+	<!--$Revision: 5865 $-->
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {font-family: monospace; font-size: 32px;}
+		input {font-family: monospace; font-size: 1.0em; text-align: right;}
+		a {text-decoration: none;}
+		div.div-return-home {font-size: 0.5em;}
+		div.div-restart-button {margin-top: 5px;}
+		div.progress{
+			width: 95%;
+			max-width: 300px;
+			height: 18px;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+		div.bar{
+			float: left;
+			height: 18px;
+			width: 8%;
+			margin-left: 1%;
+			margin-right: 1%;
+			border-radius: 3px;
+			background-color: #ddd;
+		}
+
+		table, td {
+			border: 1px solid #aaa;
+			border-collapse: collapse;
+		}
+		td {
+			width: 42px;
+			height: 40px;
+			text-align: center;
+		}
+		input.in1 {
+			width: 80%;
+			height: 80%;
+			padding: 0px;
+		}
+		input.in2 {
+			width: 60%;
+			height: 80%;
+			padding: 0px;
+		}
+		td.td-regroup-indicator {
+			font-size: 0.5em;
+		}
+		td.td-underscore {
+			border-bottom: 3pt solid black;
+		}
+		output.output-status {
+			font-size: 0.8em;
+		}
+		input.btn-restart {
+			font-size: 0.8em;
+			width: 80%;
+			max-width: 200px;
+			height: 35px;
+			text-align: center;
+		}
+
+	</style>
+</head>
+<body>
+	<div>
+		<div class="div-return-home"><a href="/">&#8592;<span id="btn_return" class="i18n-text">Indietro</span></a></div>
+		<div class="progress">
+			<div id="bar0" class="bar"></div>
+			<div id="bar1" class="bar"></div>
+			<div id="bar2" class="bar"></div>
+			<div id="bar3" class="bar"></div>
+			<div id="bar4" class="bar"></div>
+			<div id="bar5" class="bar"></div>
+			<div id="bar6" class="bar"></div>
+			<div id="bar7" class="bar"></div>
+			<div id="bar8" class="bar"></div>
+			<div id="bar9" class="bar"></div>
+		</div>
+		<div>
+			<div>
+				<table>
+					<tr>
+						<td></td>
+						<td class="td-regroup-indicator" id="r0" onclick="tdclick(0)"></td>
+						<td class="td-regroup-indicator" id="r1" onclick="tdclick(1)"></td>
+						<td class="td-regroup-indicator" id="r2" onclick="tdclick(2)"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td id="x0"></td>
+						<td id="x1"></td>
+						<td id="x2"></td>
+						<td id="sign"></td>
+					</tr>
+					<tr>
+						<td class="td-underscore"></td>
+						<td class="td-underscore" id="y0"></td>
+						<td class="td-underscore" id="y1"></td>
+						<td class="td-underscore" id="y2"></td>
+						<td class="td-underscore">=</td>
+					</tr>
+					<tr>
+						<td colspan="2"><input type="text" id="z0" class="in1" inputmode="decimal" size="2" maxlength="2" autocomplete="off" onkeyup="onInputKeyUp(0)" value=""></td>
+						<td><input type="text" id="z1" class="in2" inputmode="decimal" size="1" maxlength="1" autocomplete="off" onkeyup="onInputKeyUp(1)" value=""></td>
+						<td><input type="text" id="z2" class="in2" inputmode="decimal" size="1" maxlength="1" autocomplete="off" onkeyup="onInputKeyUp(2)" value=""></td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+			<div>
+				<output class="output-status" id="status"></output>
+			</div>
+		</div>
+	</div>
+
+	<div id="div_restart" class="div-restart-button">
+		<input type="button" class="btn-restart" id="btn_restart" onclick="javascript:restart();" value="Riavvio">
+	</div>
+
+	<script>
+		const max_length = 3;
+		const min_value = 100;
+		const max_value = 999;
+		const allow_overflow = 1;
+	</script>
+
+	<script>
+		"use strict";
+
+		let expected_result = NaN;
+		let expected_length = NaN;
+		let quiz_sign = 1;		// 0 for '-', 1 for '+'
+		let cnt_answers = 0;
+		let cnt0 = 0;
+		let cnt1 = 0;
+		let current_z;
+		let quiz_timeout = 3000;		// how long to show messages between quizzes
+
+		const userLang = navigator.language || navigator.userLanguage;
+		let lang_pack;
+		if (userLang.toLowerCase().includes("ru")) {
+			lang_pack = {back: "Назад", restart: "Обновить", correct: " - правильно", wrong: "Нет, это не ", ottimo: "Отлично!"}
+		} else {
+			lang_pack = {back: "Indietro", restart: "Riavvio", correct: " è corretto", wrong: "No, non è ", ottimo: "Ottimo!"}
+		}
+
+		const status_tag = document.getElementById("status");
+
+		const btn_return_tag = document.getElementById("btn_return");
+		btn_return_tag.innerHTML = lang_pack.back;
+		const btn_restart_tag = document.getElementById("btn_restart");
+		btn_restart_tag.value = lang_pack.restart;
+
+		const div_restart_tag = document.getElementById("div_restart");
+		const r0_tag = document.getElementById("r0");
+		const r1_tag = document.getElementById("r1");
+		const r2_tag = document.getElementById("r2");
+		const x0_tag = document.getElementById("x0");
+		const x1_tag = document.getElementById("x1");
+		const x2_tag = document.getElementById("x2");
+		const y0_tag = document.getElementById("y0");
+		const y1_tag = document.getElementById("y1");
+		const y2_tag = document.getElementById("y2");
+		const z0_tag = document.getElementById("z0");
+		const z1_tag = document.getElementById("z1");
+		const z2_tag = document.getElementById("z2");
+		const sign_tag = document.getElementById("sign");
+
+		function getRandomArbitrary(min, max) {
+			return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+
+		function generateXY(min_value, max_value) {
+			const x = getRandomArbitrary(min_value, max_value);
+			const y = getRandomArbitrary(min_value, max_value);
+			return [x, y];
+		}
+
+		function generateAddition(min_value, max_value, allow_overflow) {
+			for (let i = 0; i < 1000; i++) {
+				const [x, y] = generateXY(min_value, max_value);
+				if (!allow_overflow) {
+					let tmp1 = x % 10;
+					let tmp2 = y % 10;
+					if ((tmp1 + tmp2) >= 10) continue;
+					tmp1 = x % 100;
+					tmp2 = y % 100;
+					if ((tmp1 + tmp2) >= 100) continue;
+					tmp1 = x;
+					tmp2 = y;
+					if ((tmp1 + tmp2) >= 1000) continue;
+				}
+				return [x, y];
+			}
+		}
+
+		function generateSubtraction(min_value, max_value, allow_overflow) {
+			for (let i = 0; i < 1000; i++) {
+				const [x, y] = generateXY(min_value, max_value);
+				if (!allow_overflow) {
+					let tmp1 = x % 10;
+					let tmp2 = y % 10;
+					if ((tmp1 - tmp2) < 0) continue;
+					tmp1 = x % 100;
+					tmp2 = y % 100;
+					if ((tmp1 - tmp2) < 0) continue;
+					tmp1 = x;
+					tmp2 = y;
+					if ((tmp1 - tmp2) < min_value) continue;
+				}
+				if ((x - y) <= 0) continue;
+				return [x, y];
+			}
+		}
+
+		function populate_quiz() {
+			status_tag.style.backgroundColor = "";
+			status_tag.value = "";
+
+			let xy;
+			const s = Math.round(Math.random());
+			// we need 4 equaions with "+" and 5 with "-"
+			if ((cnt0 > 4) || (s && (cnt1 < 4))) {
+				xy = generateAddition(min_value, max_value, allow_overflow);
+				sign_tag.innerHTML = "+";
+				quiz_sign = 1;
+				expected_result = xy[0] + xy[1];
+				cnt1++;
+			} else {
+				xy = generateSubtraction(min_value, max_value, allow_overflow);
+				sign_tag.innerHTML = "-";
+				quiz_sign = 0;
+				expected_result = xy[0] - xy[1];
+				cnt0++;
+			}
+			const x_str = xy[0].toString();
+			const y_str = xy[1].toString();
+			x0_tag.innerHTML = x_str[0];
+			y0_tag.innerHTML = y_str[0];
+			if (max_length >= 2) {
+				x1_tag.innerHTML = x_str[1];
+				y1_tag.innerHTML = y_str[1];
+			}
+			if (max_length >= 3) {
+				x2_tag.innerHTML = x_str[2];
+				y2_tag.innerHTML = y_str[2];
+			}
+			expected_length = expected_result.toString().length;
+		}
+
+		function onInputKeyUp(id) {
+			if(event.key === "Delete") {
+				eraseInputs();
+			}
+			if(event.key === "Backspace") {
+				eraseInputs();
+			}
+			if (isNaN(expected_result)) return;
+			const element = document.getElementById("z"+id);
+			if (element.value.length > 0) {
+				if (id == 2) {
+					z1_tag.focus({preventScroll: true});
+					current_z = 1;
+				}
+				if (id == 1) {
+					z0_tag.focus({preventScroll: true});
+					current_z = 0;
+				}
+			}
+			let content = z0_tag.value;
+			if (max_length == 2) {
+				content = content + z1_tag.value;
+			}
+			if (max_length == 3) {
+				content = content + z1_tag.value + z2_tag.value;
+			}
+			if (content.length == expected_length) {
+				check(content);
+			}
+		}
+
+		function showProgress(num) {
+			// num = 5 means 5 green bars
+			const collection = document.querySelectorAll(".bar");
+			for (let i = 0; i < 10; i++) {
+				const id_num = collection[i].id.replace("bar", "");
+				let bar_color = "#ddd";
+				if (id_num < num) {
+					bar_color = "green";
+				}
+				collection[i].style.backgroundColor = bar_color;
+			}
+		}
+
+		function eraseInputs() {
+			if (allow_overflow) {
+				r0_tag.style.backgroundColor = "";
+				r0_tag.innerText = "";
+			}
+			z0_tag.value = "";
+			z0_tag.style.color = "";
+			if (max_length == 1) {
+				z0_tag.focus({preventScroll: true});
+				current_z = 0;
+			}
+			if (max_length == 2) {
+				z1_tag.focus({preventScroll: true});
+				current_z = 1;
+			}
+			if (max_length == 3) {
+				z2_tag.focus({preventScroll: true});
+				current_z = 2;
+			}
+			if (max_length >= 2) {
+				if (allow_overflow) {
+					r1_tag.style.backgroundColor = "";
+					r1_tag.innerText = "";
+				}
+				z1_tag.value = "";
+				z1_tag.style.color = "";
+			}
+			if (max_length >= 3) {
+				if (allow_overflow) {
+					r2_tag.style.backgroundColor = "";
+					r2_tag.innerText = "";
+				}
+				z2_tag.value = "";
+				z2_tag.style.color = "";
+			}
+		}
+
+		function check(user_input) {
+			if (isNaN(expected_result)) return;
+			const user_number = Number(user_input);
+			if (user_number == expected_result) {
+				expected_result = NaN;		// immediately clear expected_result to avoid double correct answers
+				expected_length = NaN;
+				cnt_answers = cnt_answers+1;
+				z0_tag.style.color = "green";
+				if (max_length >= 2) {
+					z1_tag.style.color = "green";
+				}
+				if (max_length >= 3) {
+					z2_tag.style.color = "green";
+				}
+				status_tag.style.backgroundColor = "#90EE90";
+				status_tag.value = user_input + lang_pack.correct;
+				showProgress(cnt_answers);
+				if (cnt_answers == 10) {
+					status_tag.value = lang_pack.ottimo;
+					div_restart_tag.style.display = "block";
+					return;
+				}
+				setTimeout(function() {
+					eraseInputs();
+					populate_quiz();
+				}, quiz_timeout);
+			} else {
+				status_tag.value = lang_pack.wrong + user_input;
+				setTimeout(function() {
+					eraseInputs();
+					status_tag.style.backgroundColor = "white";
+				}, quiz_timeout);
+				status_tag.style.backgroundColor = "#FFCCCB";
+			}
+		}
+
+		function tdclick(id) {
+			if (current_z == 0) {
+				z0_tag.focus({preventScroll: true});
+			}
+			if (current_z == 1) {
+				z1_tag.focus({preventScroll: true});
+			}
+			if (current_z == 2) {
+				z2_tag.focus({preventScroll: true});
+			}
+			const td_tag = document.getElementById("r"+id);
+			if (td_tag.style.backgroundColor == "") {
+				if (quiz_sign == 1) {
+					td_tag.style.backgroundColor = "lemonchiffon";
+					td_tag.innerText = "+1";
+				} else {
+					td_tag.style.backgroundColor = "lemonchiffon";//"#FFCCCB";	//Light Red
+					td_tag.innerText = "-1";
+				}
+			} else {
+				td_tag.style.backgroundColor = "";
+				td_tag.innerText = "";
+			}
+		}
+
+		function restart() {
+			cnt_answers = 0;
+			cnt0 = 0;
+			cnt1 = 0;
+			current_z = 2;
+			div_restart_tag.style.display = "none";
+			eraseInputs();
+			showProgress(0);
+			populate_quiz();
+		}
+		restart();
+
+		if("visualViewport" in window) {
+			window.visualViewport.addEventListener("resize", function(event) {
+				window.scrollTo(0, 0);		// bug in iOS
+			});
+		}
+	</script>
+
+</body>
+</html>
