@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<title>Subtraction Math Quiz for Kids</title>
-	<!--$Revision: 5865 $-->
+	<!--$Revision: 5887 $-->
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
@@ -63,12 +63,11 @@
 			height: 35px;
 			text-align: center;
 		}
-
 	</style>
 </head>
 <body>
 	<div>
-		<div class="div-return-home"><a href="/">&#8592;<span id="btn_return" class="i18n-text">Indietro</span></a></div>
+		<div class="div-return-home"><a href="/">&#8592;<span id="btn_return" class="i18n-text">Return</span></a></div>
 		<div class="progress">
 			<div id="bar0" class="bar"></div>
 			<div id="bar1" class="bar"></div>
@@ -125,284 +124,321 @@
 	</div>
 
 	<script>
-		const max_length = 3;
-		const min_value = 100;
-		const max_value = 999;
-		const allow_overflow = 1;
-	</script>
+"use strict";
+const maxLength = 3;
+const minValue = 100;
+const maxValue = 999;
+const forceOverflow = 1;
 
-	<script>
-		"use strict";
+let expectedResult = NaN;
+let expectedLength = NaN;
+let quizSign = 1;  // 0 for '-', 1 for '+'
+let cntAnswers = 0;
+let cnt0 = 0;
+let cnt1 = 0;
+let currentZTag;
+let quizTimeout = 3000;  // how long to show messages between quizzes
 
-		let expected_result = NaN;
-		let expected_length = NaN;
-		let quiz_sign = 1;		// 0 for '-', 1 for '+'
-		let cnt_answers = 0;
-		let cnt0 = 0;
-		let cnt1 = 0;
-		let current_z;
-		let quiz_timeout = 3000;		// how long to show messages between quizzes
+const userLang = navigator.language || navigator.userLanguage;
+//const userLang = 'ru-RU';
+//const userLang = 'it-IT';
+let langPack;
+if (userLang.toLowerCase().includes('ru')) {
+  langPack = {back: 'Назад', restart: 'Обновить', correct: ' - правильно',
+              wrong: 'Нет, это не ', ottimo: 'Отлично!'};
+} else if (userLang.toLowerCase().includes('it')) {
+  langPack = {back: 'Indietro', restart: 'Riavvio', correct: ' è corretto',
+              wrong: 'No, non è ', ottimo: 'Ottimo!'};
+} else {
+  langPack = {back: 'Return', restart: 'Restart', correct: ' is correct',
+              wrong: 'No, it\'s not ', ottimo: 'Perfect!'};
+}
 
-		const userLang = navigator.language || navigator.userLanguage;
-		let lang_pack;
-		if (userLang.toLowerCase().includes("ru")) {
-			lang_pack = {back: "Назад", restart: "Обновить", correct: " - правильно", wrong: "Нет, это не ", ottimo: "Отлично!"}
-		} else {
-			lang_pack = {back: "Indietro", restart: "Riavvio", correct: " è corretto", wrong: "No, non è ", ottimo: "Ottimo!"}
-		}
+const statusTag = document.getElementById('status');
 
-		const status_tag = document.getElementById("status");
+const btnReturnTag = document.getElementById('btn_return');
+btnReturnTag.innerHTML = langPack.back;
+const btnRestartTag = document.getElementById('btn_restart');
+btnRestartTag.value = langPack.restart;
 
-		const btn_return_tag = document.getElementById("btn_return");
-		btn_return_tag.innerHTML = lang_pack.back;
-		const btn_restart_tag = document.getElementById("btn_restart");
-		btn_restart_tag.value = lang_pack.restart;
+const divRestartTag = document.getElementById('div_restart');
+const r0Tag = document.getElementById('r0');
+const r1Tag = document.getElementById('r1');
+const r2Tag = document.getElementById('r2');
+const x0Tag = document.getElementById('x0');
+const x1Tag = document.getElementById('x1');
+const x2Tag = document.getElementById('x2');
+const y0Tag = document.getElementById('y0');
+const y1Tag = document.getElementById('y1');
+const y2Tag = document.getElementById('y2');
+const z0Tag = document.getElementById('z0');
+const z1Tag = document.getElementById('z1');
+const z2Tag = document.getElementById('z2');
+const signTag = document.getElementById('sign');
 
-		const div_restart_tag = document.getElementById("div_restart");
-		const r0_tag = document.getElementById("r0");
-		const r1_tag = document.getElementById("r1");
-		const r2_tag = document.getElementById("r2");
-		const x0_tag = document.getElementById("x0");
-		const x1_tag = document.getElementById("x1");
-		const x2_tag = document.getElementById("x2");
-		const y0_tag = document.getElementById("y0");
-		const y1_tag = document.getElementById("y1");
-		const y2_tag = document.getElementById("y2");
-		const z0_tag = document.getElementById("z0");
-		const z1_tag = document.getElementById("z1");
-		const z2_tag = document.getElementById("z2");
-		const sign_tag = document.getElementById("sign");
+function getRandomArbitrary(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-		function getRandomArbitrary(min, max) {
-			return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
+function generateXY(minValue, maxValue) {
+  const x = getRandomArbitrary(minValue, maxValue);
+  const y = getRandomArbitrary(minValue, maxValue);
+  return [x, y];
+}
 
-		function generateXY(min_value, max_value) {
-			const x = getRandomArbitrary(min_value, max_value);
-			const y = getRandomArbitrary(min_value, max_value);
-			return [x, y];
-		}
+function generateAddition(minValue, maxValue, forceOverflow) {
+  for (let i = 0; i < 1000; i++) {
+    const [x, y] = generateXY(minValue, maxValue);
+    let numOverflows = 0;
 
-		function generateAddition(min_value, max_value, allow_overflow) {
-			for (let i = 0; i < 1000; i++) {
-				const [x, y] = generateXY(min_value, max_value);
-				if (!allow_overflow) {
-					let tmp1 = x % 10;
-					let tmp2 = y % 10;
-					if ((tmp1 + tmp2) >= 10) continue;
-					tmp1 = x % 100;
-					tmp2 = y % 100;
-					if ((tmp1 + tmp2) >= 100) continue;
-					tmp1 = x;
-					tmp2 = y;
-					if ((tmp1 + tmp2) >= 1000) continue;
-				}
-				return [x, y];
-			}
-		}
+    let tmp1 = x % 10;
+    let tmp2 = y % 10;
+    if ((tmp1 + tmp2) >= 10) {
+      numOverflows++;
+    }
 
-		function generateSubtraction(min_value, max_value, allow_overflow) {
-			for (let i = 0; i < 1000; i++) {
-				const [x, y] = generateXY(min_value, max_value);
-				if (!allow_overflow) {
-					let tmp1 = x % 10;
-					let tmp2 = y % 10;
-					if ((tmp1 - tmp2) < 0) continue;
-					tmp1 = x % 100;
-					tmp2 = y % 100;
-					if ((tmp1 - tmp2) < 0) continue;
-					tmp1 = x;
-					tmp2 = y;
-					if ((tmp1 - tmp2) < min_value) continue;
-				}
-				if ((x - y) <= 0) continue;
-				return [x, y];
-			}
-		}
+    tmp1 = x % 100;
+    tmp2 = y % 100;
+    if ((tmp1 + tmp2) >= 100) {
+      numOverflows++;
+    }
 
-		function populate_quiz() {
-			status_tag.style.backgroundColor = "";
-			status_tag.value = "";
+    tmp1 = x;
+    tmp2 = y;
+    if ((tmp1 + tmp2) >= 1000) {
+      numOverflows++;
+    }
 
-			let xy;
-			xy = generateSubtraction(min_value, max_value, allow_overflow);
-			sign_tag.innerHTML = "-";
-			quiz_sign = 0;
-			expected_result = xy[0] - xy[1];
-			const x_str = xy[0].toString();
-			const y_str = xy[1].toString();
-			x0_tag.innerHTML = x_str[0];
-			y0_tag.innerHTML = y_str[0];
-			if (max_length >= 2) {
-				x1_tag.innerHTML = x_str[1];
-				y1_tag.innerHTML = y_str[1];
-			}
-			if (max_length >= 3) {
-				x2_tag.innerHTML = x_str[2];
-				y2_tag.innerHTML = y_str[2];
-			}
-			expected_length = expected_result.toString().length;
-		}
+    if (!forceOverflow && (numOverflows > 0)) {
+      continue;
+    }
+    if (forceOverflow && (numOverflows == 0)) {
+      continue;
+    }
 
-		function onInputKeyUp(id) {
-			if(event.key === "Delete") {
-				eraseInputs();
-			}
-			if(event.key === "Backspace") {
-				eraseInputs();
-			}
-			if (isNaN(expected_result)) return;
-			const element = document.getElementById("z"+id);
-			if (element.value.length > 0) {
-				if (id == 2) {
-					z1_tag.focus({preventScroll: true});
-					current_z = 1;
-				}
-				if (id == 1) {
-					z0_tag.focus({preventScroll: true});
-					current_z = 0;
-				}
-			}
-			let content = z0_tag.value;
-			if (max_length == 2) {
-				content = content + z1_tag.value;
-			}
-			if (max_length == 3) {
-				content = content + z1_tag.value + z2_tag.value;
-			}
-			if (content.length == expected_length) {
-				check(content);
-			}
-		}
+    return [x, y];
+  }
+}
 
-		function showProgress(num) {
-			// num = 5 means 5 green bars
-			const collection = document.querySelectorAll(".bar");
-			for (let i = 0; i < 10; i++) {
-				const id_num = collection[i].id.replace("bar", "");
-				let bar_color = "#ddd";
-				if (id_num < num) {
-					bar_color = "green";
-				}
-				collection[i].style.backgroundColor = bar_color;
-			}
-		}
+function generateSubtraction(minValue, maxValue, forceOverflow) {
+  for (let i = 0; i < 1000; i++) {
+    const [x, y] = generateXY(minValue, maxValue);
+    let numOverflows = 0;
 
-		function eraseInputs() {
-			if (allow_overflow) {
-				r0_tag.style.backgroundColor = "";
-				r0_tag.innerText = "";
-			}
-			z0_tag.value = "";
-			z0_tag.style.color = "";
-			if (max_length == 1) {
-				z0_tag.focus({preventScroll: true});
-				current_z = 0;
-			}
-			if (max_length == 2) {
-				z1_tag.focus({preventScroll: true});
-				current_z = 1;
-			}
-			if (max_length == 3) {
-				z2_tag.focus({preventScroll: true});
-				current_z = 2;
-			}
-			if (max_length >= 2) {
-				if (allow_overflow) {
-					r1_tag.style.backgroundColor = "";
-					r1_tag.innerText = "";
-				}
-				z1_tag.value = "";
-				z1_tag.style.color = "";
-			}
-			if (max_length >= 3) {
-				if (allow_overflow) {
-					r2_tag.style.backgroundColor = "";
-					r2_tag.innerText = "";
-				}
-				z2_tag.value = "";
-				z2_tag.style.color = "";
-			}
-		}
+    if ((x - y) < minValue) {
+      continue;
+    }
 
-		function check(user_input) {
-			if (isNaN(expected_result)) return;
-			const user_number = Number(user_input);
-			if (user_number == expected_result) {
-				expected_result = NaN;		// immediately clear expected_result to avoid double correct answers
-				expected_length = NaN;
-				cnt_answers = cnt_answers+1;
-				z0_tag.style.color = "green";
-				if (max_length >= 2) {
-					z1_tag.style.color = "green";
-				}
-				if (max_length >= 3) {
-					z2_tag.style.color = "green";
-				}
-				status_tag.style.backgroundColor = "#90EE90";
-				status_tag.value = user_input + lang_pack.correct;
-				showProgress(cnt_answers);
-				if (cnt_answers == 10) {
-					status_tag.value = lang_pack.ottimo;
-					div_restart_tag.style.display = "block";
-					return;
-				}
-				setTimeout(function() {
-					eraseInputs();
-					populate_quiz();
-				}, quiz_timeout);
-			} else {
-				status_tag.value = lang_pack.wrong + user_input;
-				setTimeout(function() {
-					eraseInputs();
-					status_tag.style.backgroundColor = "white";
-				}, quiz_timeout);
-				status_tag.style.backgroundColor = "#FFCCCB";
-			}
-		}
+    let tmp1 = x % 10;
+    let tmp2 = y % 10;
+    if ((tmp1 - tmp2) < 0) {
+      numOverflows++;
+    }
 
-		function tdclick(id) {
-			if (current_z == 0) {
-				z0_tag.focus({preventScroll: true});
-			}
-			if (current_z == 1) {
-				z1_tag.focus({preventScroll: true});
-			}
-			if (current_z == 2) {
-				z2_tag.focus({preventScroll: true});
-			}
-			const td_tag = document.getElementById("r"+id);
-			if (td_tag.style.backgroundColor == "") {
-				if (quiz_sign == 1) {
-					td_tag.style.backgroundColor = "lemonchiffon";
-					td_tag.innerText = "+1";
-				} else {
-					td_tag.style.backgroundColor = "lemonchiffon";//"#FFCCCB";	//Light Red
-					td_tag.innerText = "-1";
-				}
-			} else {
-				td_tag.style.backgroundColor = "";
-				td_tag.innerText = "";
-			}
-		}
+    tmp1 = x % 100;
+    tmp2 = y % 100;
+    if ((tmp1 - tmp2) < 0) {
+      numOverflows++;
+    }
 
-		function restart() {
-			cnt_answers = 0;
-			cnt0 = 0;
-			cnt1 = 0;
-			current_z = 2;
-			div_restart_tag.style.display = "none";
-			eraseInputs();
-			showProgress(0);
-			populate_quiz();
-		}
-		restart();
+    if (!forceOverflow && (numOverflows > 0)) {
+      continue;
+    }
+    if (forceOverflow && (numOverflows == 0)) {
+      continue;
+    }
 
-		if("visualViewport" in window) {
-			window.visualViewport.addEventListener("resize", function(event) {
-				window.scrollTo(0, 0);		// bug in iOS
-			});
-		}
+    return [x, y];
+  }
+}
+
+function populateQuiz() {
+  statusTag.style.backgroundColor = '';
+  statusTag.value = '';
+
+  let xy;
+  xy = generateSubtraction(minValue, maxValue, forceOverflow);
+  signTag.innerHTML = '-';
+  quizSign = 0;
+  expectedResult = xy[0] - xy[1];
+  const xStr = xy[0].toString();
+  const yStr = xy[1].toString();
+  x0Tag.innerHTML = xStr[0];
+  y0Tag.innerHTML = yStr[0];
+  if (maxLength >= 2) {
+    x1Tag.innerHTML = xStr[1];
+    y1Tag.innerHTML = yStr[1];
+  }
+  if (maxLength >= 3) {
+    x2Tag.innerHTML = xStr[2];
+    y2Tag.innerHTML = yStr[2];
+  }
+  expectedLength = expectedResult.toString().length;
+}
+
+function onInputKeyUp(id) {
+  if (event.key === 'Delete') {
+    eraseInputs();
+  }
+  if (event.key === 'Backspace') {
+    eraseInputs();
+  }
+  if (isNaN(expectedResult)) {
+    return;
+  }
+  const element = document.getElementById('z' + id);
+  if (element.value.length > 0) {
+    if (id == 2) {
+      z1Tag.focus({preventScroll: true});
+      currentZTag = 1;
+    }
+    if (id == 1) {
+      z0Tag.focus({preventScroll: true});
+      currentZTag = 0;
+    }
+  }
+  let content = z0Tag.value;
+  if (maxLength == 2) {
+    content = content + z1Tag.value;
+  }
+  if (maxLength == 3) {
+    content = content + z1Tag.value + z2Tag.value;
+  }
+  if (content.length == expectedLength) {
+    check(content);
+  }
+}
+
+function showProgress(num) {
+  // num = 5 means 5 green bars
+  const collection = document.querySelectorAll('.bar');
+  for (let i = 0; i < 10; i++) {
+    const idNum = collection[i].id.replace('bar', '');
+    let barColor = '#ddd';
+    if (idNum < num) {
+      barColor = 'green';
+    }
+    collection[i].style.backgroundColor = barColor;
+  }
+}
+
+function eraseInputs() {
+  if (forceOverflow) {
+    r0Tag.style.backgroundColor = '';
+    r0Tag.innerText = '';
+  }
+  z0Tag.value = '';
+  z0Tag.style.color = '';
+  if (maxLength == 1) {
+    z0Tag.focus({preventScroll: true});
+    currentZTag = 0;
+  }
+  if (maxLength == 2) {
+    z1Tag.focus({preventScroll: true});
+    currentZTag = 1;
+  }
+  if (maxLength == 3) {
+    z2Tag.focus({preventScroll: true});
+    currentZTag = 2;
+  }
+  if (maxLength >= 2) {
+    if (forceOverflow) {
+      r1Tag.style.backgroundColor = '';
+      r1Tag.innerText = '';
+    }
+    z1Tag.value = '';
+    z1Tag.style.color = '';
+  }
+  if (maxLength >= 3) {
+    if (forceOverflow) {
+      r2Tag.style.backgroundColor = '';
+      r2Tag.innerText = '';
+    }
+    z2Tag.value = '';
+    z2Tag.style.color = '';
+  }
+}
+
+function check(userInput) {
+  if (isNaN(expectedResult)) {
+    return;
+  }
+  const userNumber = Number(userInput);
+  if (userNumber == expectedResult) {
+    expectedResult = NaN;    // immediately clear expectedResult to avoid double correct answers
+    expectedLength = NaN;
+    cntAnswers = cntAnswers + 1;
+    z0Tag.style.color = 'green';
+    if (maxLength >= 2) {
+      z1Tag.style.color = 'green';
+    }
+    if (maxLength >= 3) {
+      z2Tag.style.color = 'green';
+    }
+    statusTag.style.backgroundColor = '#90EE90';
+    statusTag.value = userInput + langPack.correct;
+    showProgress(cntAnswers);
+    if (cntAnswers == 10) {
+      statusTag.value = langPack.ottimo;
+      divRestartTag.style.display = 'block';
+      return;
+    }
+    setTimeout(function() {
+      eraseInputs();
+      populateQuiz();
+    }, quizTimeout);
+  } else {
+    statusTag.value = langPack.wrong + userInput;
+    setTimeout(function() {
+      eraseInputs();
+      statusTag.style.backgroundColor = 'white';
+    }, quizTimeout);
+    statusTag.style.backgroundColor = '#FFCCCB';
+  }
+}
+
+function tdclick(id) {
+  if (currentZTag == 0) {
+    z0Tag.focus({preventScroll: true});
+  }
+  if (currentZTag == 1) {
+    z1Tag.focus({preventScroll: true});
+  }
+  if (currentZTag == 2) {
+    z2Tag.focus({preventScroll: true});
+  }
+  const tdTag = document.getElementById('r' + id);
+  if (tdTag.style.backgroundColor == '') {
+    if (quizSign == 1) {
+      tdTag.style.backgroundColor = 'lemonchiffon';
+      tdTag.innerText = '+1';
+    } else {
+      tdTag.style.backgroundColor = 'lemonchiffon';//'#FFCCCB';  //Light Red
+      tdTag.innerText = '-1';
+    }
+  } else {
+    tdTag.style.backgroundColor = '';
+    tdTag.innerText = '';
+  }
+}
+
+function restart() {
+  cntAnswers = 0;
+  cnt0 = 0;
+  cnt1 = 0;
+  currentZTag = 2;
+  divRestartTag.style.display = 'none';
+  eraseInputs();
+  showProgress(0);
+  populateQuiz();
+}
+restart();
+
+if ('visualViewport' in window) {
+  window.visualViewport.addEventListener('resize', function(event) {
+    window.scrollTo(0, 0);    // bug in iOS
+  });
+}
 	</script>
 
 </body>

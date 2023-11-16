@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Quiz Tutorial</title>
+	<!--$Revision: 5866 $-->
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {font-size: 18px;}
+		h1 {font-size: 22px;}
+		p {margin: 5px 0px;}
+		img {max-width:100%; height:auto;}
+		a {text-decoration: none;}
+		div.div-return-home {font-family: monospace; font-size: 16px;}
+	</style>
+</head>
+<body>
+	<div>
+		<div class="div-return-home"><a href="/">&#8592;<span id="btn_return" class="i18n-text">Return</span></a></div>
+		<br>
+		<h1><span id="correct_addition" class="i18n-text">Example of correct addition</span></h1>
+		<p><img src="/example1.gif"></p>
+		<br>
+		<h1><span id="correct_subtraction" class="i18n-text">Example of correct subtraction</span></h1>
+		<p><img src="/example2.gif"></p>
+		<br>
+		<h1><span id="incorrect_subtraction" class="i18n-text">Example of incorrect subtraction</span></h1>
+		<p><img src="/example3.gif"></p>
+		<br>
+	</div>
+
+	<script>
+		"use strict";
+		const userLang = navigator.language || navigator.userLanguage;
+//		const userLang = "it-IT";
+//		const userLang = "ru-RU";
+		let translations;
+		if (userLang.toLowerCase().includes("ru")) {
+			translations = {btn_return: "Назад", correct_addition: "Пример корректного сложения", correct_subtraction: "Пример корректного вычитания",
+							incorrect_subtraction: "Пример вычитания с ошибкой"};
+		} else if (userLang.toLowerCase().includes("it")) {
+			translations = {btn_return: "Indietro", correct_addition: "Esempio di addizione corretta", correct_subtraction: "Esempio di sottrazione corretta",
+							incorrect_subtraction: "Esempio di sottrazione errata"};
+		} else {
+			translations = {};
+		}
+
+		function translateElement(element) {
+			const key = element.id;
+			if (key in translations) {
+				const translation = translations[key];
+				element.textContent = translation;
+			}
+		}
+
+		const collection = document.querySelectorAll(".i18n-text");
+		collection.forEach(translateElement);
+	</script>
+
+</body>
+</html>

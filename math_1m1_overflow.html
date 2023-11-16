@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Addition Math Quiz for Kids</title>
-	<!--$Revision: 5891 $-->
+	<title>Subtraction Math Quiz for Kids</title>
+	<!--$Revision: 5887 $-->
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
@@ -85,23 +85,26 @@
 				<table>
 					<tr>
 						<td></td>
+						<td class="td-regroup-indicator" id="r0" onclick="tdclick(0)"></td>
+						<td class="td-regroup-indicator" id="r1" onclick="tdclick(1)"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td></td>
 						<td id="x0"></td>
 						<td id="x1"></td>
-						<td id="x2"></td>
 						<td id="sign"></td>
 					</tr>
 					<tr>
 						<td class="td-underscore"></td>
 						<td class="td-underscore" id="y0"></td>
 						<td class="td-underscore" id="y1"></td>
-						<td class="td-underscore" id="y2"></td>
 						<td class="td-underscore">=</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><input type="text" id="z0" class="in2" inputmode="decimal" size="1" maxlength="1" autocomplete="off" onkeyup="onInputKeyUp(0)" value=""></td>
 						<td><input type="text" id="z1" class="in2" inputmode="decimal" size="1" maxlength="1" autocomplete="off" onkeyup="onInputKeyUp(1)" value=""></td>
-						<td><input type="text" id="z2" class="in2" inputmode="decimal" size="1" maxlength="1" autocomplete="off" onkeyup="onInputKeyUp(2)" value=""></td>
 						<td></td>
 					</tr>
 				</table>
@@ -118,10 +121,10 @@
 
 	<script>
 "use strict";
-const maxLength = 3;
-const minValue = 100;
-const maxValue = 999;
-const forceOverflow = 0;
+const maxLength = 2;
+const minValue = 1;
+const maxValue = 99;
+const forceOverflow = 1;
 
 let expectedResult = NaN;
 let expectedLength = NaN;
@@ -174,8 +177,8 @@ function getRandomArbitrary(min, max) {
 }
 
 function generateXY(minValue, maxValue) {
-  const x = getRandomArbitrary(minValue, maxValue);
-  const y = getRandomArbitrary(minValue, maxValue);
+  const x = getRandomArbitrary(10, maxValue);
+  const y = getRandomArbitrary(1, 9);
   return [x, y];
 }
 
@@ -250,12 +253,12 @@ function populateQuiz() {
   statusTag.value = '';
 
   let xy;
-  xy = generateAddition(minValue, maxValue, forceOverflow);
-  signTag.innerHTML = '+';
-  quizSign = 1;
-  expectedResult = xy[0] + xy[1];
+  xy = generateSubtraction(minValue, maxValue, forceOverflow);
+  signTag.innerHTML = '-';
+  quizSign = 0;
+  expectedResult = xy[0] - xy[1];
   const xStr = xy[0].toString();
-  const yStr = xy[1].toString();
+  const yStr = ' ' + xy[1].toString();
   x0Tag.innerHTML = xStr[0];
   y0Tag.innerHTML = yStr[0];
   if (maxLength >= 2) {
